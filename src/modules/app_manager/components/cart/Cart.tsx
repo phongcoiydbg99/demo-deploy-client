@@ -521,7 +521,10 @@ const Cart = (props: some) => {
                     fontSize: 17,
                     fontWeight: "bold",
                   }}
-                  onClick={fetchConfirmPayment}
+                  onClick={() => {
+                    props?.history?.push(routes.PAYMENT);
+                    // fetchConfirmPayment
+                  }}
                 >
                   Tiến hành đặt hàng
                 </Button>
