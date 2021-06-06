@@ -193,7 +193,6 @@ const Cart = (props: some) => {
       const res: some = await actionGetAddressByUser({
         UserID: userID,
       });
-      setLoading(true);
       if (res?.code === SUCCESS_CODE) {
         if (res?.message) {
           setListAddress(res?.message);
@@ -208,6 +207,9 @@ const Cart = (props: some) => {
       } else {
       }
     } catch (error) {}
+    finally {
+      setLoading(true);
+    }
   };
 
   const fetchConfirmPayment = async () => {
