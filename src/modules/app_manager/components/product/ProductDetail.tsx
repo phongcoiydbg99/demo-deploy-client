@@ -21,6 +21,7 @@ import parse from 'html-react-parser';
 import JSONbig from 'json-bigint';
 import React, { useState } from 'react';
 import { useParams, withRouter } from 'react-router-dom';
+import { FacebookShareButton } from 'react-share';
 import {
   ACCOUNTS_ID,
   CART_LOCAL_STORAGE,
@@ -72,6 +73,7 @@ const useStyles = makeStyles((theme: Theme) =>
       borderRadius: 5,
       marginRight: 13,
       borderStyle: 'solid',
+      borderColor: 'blue',
       display: 'flex',
       borderWidth: 1,
     },
@@ -119,6 +121,7 @@ const ProductDetail = (props: any) => {
     localStorage.getItem(ACCOUNTS_ID) || ''
   );
   const [isFollow, setFollow] = React.useState(false);
+  const styleZoom = { width: 400, height: 250, zoomWidth: 500, img: '1.jpg' };
 
   const fetchListProduct = async () => {
     try {
@@ -311,7 +314,7 @@ const ProductDetail = (props: any) => {
   const handleLike = (id: string) => {
     fetchLikeOrDislike(id);
   };
-
+  const linkShare = window.location.href;
   return (
     <div className={classes.root} ref={imageRef}>
       {!loading && <LoaddingPage isOpen={!loading} />}
@@ -357,6 +360,7 @@ const ProductDetail = (props: any) => {
                           style={{
                             width: sizeImageSmall,
                             height: sizeImageSmall,
+                            cursor: 'pointer',
                           }}
                           className={
                             index === idx
@@ -396,6 +400,7 @@ const ProductDetail = (props: any) => {
                           opacity: 0.7,
                           borderRadius: 5,
                           paddingTop: 5,
+                          cursor: 'pointer',
                         }}
                       >
                         <Box fontSize={8}>Xem</Box>
@@ -439,12 +444,11 @@ const ProductDetail = (props: any) => {
               </Grid>
               <Grid item xs={4}>
                 <CardActions disableSpacing>
-                  {/* <IconButton aria-label="add to favorites">
-                    <FavoriteIcon />
-                  </IconButton> */}
-                  <IconButton aria-label="share">
-                    <ShareIcon />
-                  </IconButton>
+                  <FacebookShareButton url={linkShare} quote={''}>
+                    <a href="a">
+                      <ShareIcon />
+                    </a>
+                  </FacebookShareButton>
                 </CardActions>
               </Grid>
               <Grid item xs={8}>
