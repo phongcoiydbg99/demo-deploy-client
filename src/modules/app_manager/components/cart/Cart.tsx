@@ -1,9 +1,10 @@
 // import { FormattedMessage } from 'react-intl';
-import { Box, Button, Grid, Typography } from "@material-ui/core";
-import { createStyles, makeStyles, Theme } from "@material-ui/core/styles";
-import React from "react";
-import { connect } from "react-redux";
-import { withRouter } from "react-router-dom";
+import { Box, Button, Grid, Typography } from '@material-ui/core';
+import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import JSONbig from 'json-bigint';
+import React from 'react';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
 import {
   ACCOUNTS,
   ACCOUNTS_ID,
@@ -11,34 +12,33 @@ import {
   GET_CART_LOCAL_STORAGE,
   some,
   SUCCESS_CODE,
-} from "../../../../constants/constants";
-import { Row } from "../../../common/Elements";
-import ProductCart from "./ProductCart";
-import JSONbig from "json-bigint";
-import { formatter } from "../../../../utils/helpers/helpers";
-import EmptyCart from "./EmptyCart";
+} from '../../../../constants/constants';
+import { routes } from '../../../../constants/routes';
+import { ProductCount } from '../../../../models/object';
+import { formatter } from '../../../../utils/helpers/helpers';
+import { Row } from '../../../common/Elements';
 import {
   actionAddProductToCart,
-  actionDeleteProductFromCart,
-  actionGetAllProductInCart,
-  actionGetAddressByUser,
-  actionConfirmPayment,
   actionDeleteAllCart,
-} from "../../../system/systemAction";
-import DialogChangeAddress from "./DialogChangeAddress";
-import { routes } from "../../../../constants/routes";
-import LoaddingPage from "../loading/LoaddingPage";
-import LoginDialog from "../dialog/LoginDialog";
+  actionDeleteProductFromCart,
+  actionGetAddressByUser,
+  actionGetAllProductInCart,
+} from '../../../system/systemAction';
+import LoginDialog from '../dialog/LoginDialog';
+import LoaddingPage from '../loading/LoaddingPage';
+import DialogChangeAddress from './DialogChangeAddress';
+import EmptyCart from './EmptyCart';
+import ProductCart from './ProductCart';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      display: "flex",
+      display: 'flex',
       maxWidth: 900,
-      transition: theme.transitions.create("transform"),
+      transition: theme.transitions.create('transform'),
     },
     grid: {
-      backgroundColor: "white",
+      backgroundColor: 'white',
       paddingLeft: 10,
       paddingRight: 10,
     },
@@ -51,24 +51,26 @@ const useStyles = makeStyles((theme: Theme) =>
 const Cart = (props: some) => {
   const classes = useStyles();
   const [cart, setCart] = React.useState<some[]>(
-    JSONbig.parse(localStorage.getItem(CART_LOCAL_STORAGE) || "[]")
+    JSONbig.parse(localStorage.getItem(CART_LOCAL_STORAGE) || '[]')
   );
-  const [profile, setProfile] = React.useState<some>(
-    JSONbig.parse(localStorage.getItem(ACCOUNTS) || "{}")
-  );
+  const profile = JSONbig.parse(localStorage.getItem(ACCOUNTS) || '{}');
   const [bill, setBill] = React.useState(0);
   const [isGetAll, setIsGetAll] = React.useState(
     localStorage.getItem(GET_CART_LOCAL_STORAGE)
   );
-  const [countProduct, setCountProduct] = React.useState(0);
+  const [countAllProduct, setCountAllProduct] = React.useState(0);
   const [userID, setUserID] = React.useState(
-    localStorage.getItem(ACCOUNTS_ID) || ""
+    localStorage.getItem(ACCOUNTS_ID) || ''
   );
   const [address, setAddress] = React.useState<some>({});
   const [listAddress, setListAddress] = React.useState<some[]>([]);
   const [indexDefaut, setIndexDefaut] = React.useState(-1);
   const [loading, setLoading] = React.useState(false);
   const [openLoginDialog, setOpenLoginDialog] = React.useState(false);
+  const { countProduct, setCountProduct } = React.useContext(ProductCount) as {
+    countProduct: number;
+    setCountProduct: React.Dispatch<React.SetStateAction<number>>;
+  };
 
   const handleBill = () => {
     var sum = 0;
@@ -80,7 +82,7 @@ const Cart = (props: some) => {
         count = count + item.count;
       });
     setBill(sum);
-    setCountProduct(count);
+    setCountAllProduct(count);
   };
 
   const changeCount = (index: number, count: number) => {
@@ -91,7 +93,7 @@ const Cart = (props: some) => {
       { ...temp },
       ...cart.slice(index + 1),
     ];
-    fetchAddProductToCart(temp);
+    userID !== "" && fetchAddProductToCart(temp);
     setCart(listProductInCart);
     localStorage.setItem(
       CART_LOCAL_STORAGE,
@@ -105,9 +107,11 @@ const Cart = (props: some) => {
     list.splice(index, 1);
     setCart([...list]);
     localStorage.setItem(CART_LOCAL_STORAGE, JSONbig.stringify(list));
-    if (userID !== "") {
+    if (userID !== '') {
       fetchDeleteProductFromCart(temp);
     }
+     // Truyền useContext
+     setCountProduct(list.length)
   };
 
   const fetchAllProductInCart = async () => {
@@ -116,15 +120,15 @@ const Cart = (props: some) => {
         buyerID: userID,
       });
       if (res?.code === SUCCESS_CODE) {
-        if (isGetAll === "false") {
+        if (isGetAll === 'false') {
           var temp: some[] = [];
           res?.cart &&
             res?.cart.map((item: some, index: number) => {
               temp.push({ ...item?.product, count: item?.quantity });
             });
           setCart([...temp]);
-          setIsGetAll("true");
-          localStorage.setItem(GET_CART_LOCAL_STORAGE, "true");
+          setIsGetAll('true');
+          localStorage.setItem(GET_CART_LOCAL_STORAGE, 'true');
           localStorage.setItem(CART_LOCAL_STORAGE, JSONbig.stringify(temp));
         }
       } else {
@@ -149,8 +153,8 @@ const Cart = (props: some) => {
     try {
       const res: some = await actionDeleteAllCart(JSON.stringify(id));
       if (res?.code === SUCCESS_CODE) {
-        setIsGetAll("true");
-        localStorage.setItem(GET_CART_LOCAL_STORAGE, "true");
+        setIsGetAll('true');
+        localStorage.setItem(GET_CART_LOCAL_STORAGE, 'true');
         addAllProductToCartFromLocal();
       } else {
       }
@@ -158,7 +162,7 @@ const Cart = (props: some) => {
   };
 
   const addAllProductToCartFromLocal = () => {
-    if (isGetAll === "false") {
+    if (isGetAll === 'false') {
       cart &&
         cart.map((item: some, index: number) => {
           fetchAddProductToCart(item);
@@ -170,7 +174,7 @@ const Cart = (props: some) => {
     if (cart.length === 0) {
       fetchAllProductInCart();
     } else {
-      if (isGetAll === "false") {
+      if (isGetAll === 'false') {
         fetchDeleteAllCart(userID);
       }
     }
@@ -223,20 +227,23 @@ const Cart = (props: some) => {
   React.useEffect(() => {
     handleBill();
     // addAllProductToCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart]);
 
   React.useEffect(() => {
-    setUserID(localStorage.getItem(ACCOUNTS_ID) || "");
+    setUserID(localStorage.getItem(ACCOUNTS_ID) || '');
     addAllProductToCart();
     fetchGetAddressByUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+ 
 
   return (
     <>
       {!loading && <LoaddingPage isOpen={!loading} />}
       <Row
         style={{
-          color: "#ff9800",
+          color: '#ff9800',
           paddingRight: 4,
           paddingTop: 20,
           paddingBottom: 10,
@@ -247,7 +254,7 @@ const Cart = (props: some) => {
             fontWeight="fontWeightBold"
             fontSize={19}
             style={{
-              color: "#ff9800",
+              color: '#ff9800',
               paddingRight: 4,
             }}
           >
@@ -258,10 +265,10 @@ const Cart = (props: some) => {
           <Box
             fontSize={15}
             style={{
-              color: "black",
+              color: 'black',
             }}
           >
-            ({countProduct} sản phẩm)
+            ({countAllProduct} sản phẩm)
           </Box>
         </Typography>
       </Row>
@@ -269,23 +276,23 @@ const Cart = (props: some) => {
         address && (
           <Grid container>
             <Grid item xs={12} sm={8}>
-              <Box style={{ paddingRight: 15, width: "100%" }}>
+              <Box style={{ paddingRight: 15, width: '100%' }}>
                 <Row
                   style={{
-                    width: "100%",
+                    width: '100%',
                   }}
                 ></Row>
                 <Row
                   style={{
-                    flexWrap: "wrap",
-                    margin: "0 auto",
-                    width: "100%",
+                    flexWrap: 'wrap',
+                    margin: '0 auto',
+                    width: '100%',
                   }}
                 >
                   {cart.map((item: some, index: number) => {
                     return (
                       <ProductCart
-                        key={index}
+                        key={item?.id}
                         index={index}
                         data={item}
                         changeCount={changeCount}
@@ -296,7 +303,7 @@ const Cart = (props: some) => {
                 </Row>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4} style={{ width: "100%" }}>
+            <Grid item xs={12} sm={4} style={{ width: '100%' }}>
               <Grid item xs={12} className={classes.grid}>
                 <Grid item xs={12} className={classes.grid}>
                   <Row>
@@ -308,7 +315,7 @@ const Cart = (props: some) => {
                           marginRight={1}
                           paddingRight={1}
                           style={{
-                            color: "#ff9800",
+                            color: '#ff9800',
                           }}
                         >
                           Địa chỉ nhận hàng
@@ -316,14 +323,14 @@ const Cart = (props: some) => {
                       </Typography>
                     </Box>
                     <Box>
-                      {indexDefaut !== -1 && userID !== "" && (
+                      {indexDefaut !== -1 && userID !== '' && (
                         <DialogChangeAddress
                           indexDefaut={indexDefaut}
                           item={listAddress || []}
                           fetchData={handleClickChangeAddress}
                         />
                       )}
-                      {userID === "" && (
+                      {userID === '' && (
                         <Button color="secondary" onClick={handleLogin}>
                           Đăng nhập
                         </Button>
@@ -331,7 +338,7 @@ const Cart = (props: some) => {
                     </Box>
                   </Row>
                 </Grid>
-                {userID !== "" ? (
+                {userID !== '' ? (
                   <>
                     <Grid item xs={12} className={classes.grid}>
                       <Row>
@@ -340,11 +347,11 @@ const Cart = (props: some) => {
                             fontWeight="fontWeightBold"
                             fontSize={15}
                             style={{
-                              borderRight: "1px solid #ededed",
+                              borderRight: '1px solid #ededed',
                               paddingRight: 20,
                             }}
                           >
-                            {profile?.firstName + " " + profile?.lastName}
+                            {profile?.firstName + ' ' + profile?.lastName}
                           </Box>
                         </Typography>
                         <Typography>
@@ -354,7 +361,7 @@ const Cart = (props: some) => {
                               marginLeft: 20,
                             }}
                           >
-                            {address ? address?.phone : ""}
+                            {address ? address?.phone : ''}
                           </Box>
                         </Typography>
                       </Row>
@@ -366,17 +373,17 @@ const Cart = (props: some) => {
                           marginRight={1}
                           paddingRight={1}
                           style={{
-                            color: "#9e9e9e",
+                            color: '#9e9e9e',
                             paddingBottom: 10,
                           }}
                         >
                           {address
                             ? address?.address +
-                              ", " +
+                              ', ' +
                               address?.district?.districtName +
-                              ", " +
+                              ', ' +
                               address?.city?.cityName
-                            : ""}
+                            : ''}
                         </Box>
                       </Typography>
                     </Grid>
@@ -411,7 +418,7 @@ const Cart = (props: some) => {
                   <Row
                     className={classes.rowMoney}
                     style={{
-                      borderBottom: "1px solid #ededed",
+                      borderBottom: '1px solid #ededed',
                       paddingBottom: 20,
                     }}
                   >
@@ -422,7 +429,7 @@ const Cart = (props: some) => {
                           marginRight={1}
                           paddingRight={1}
                           style={{
-                            color: "#9e9e9e",
+                            color: '#9e9e9e',
                           }}
                         >
                           Tạm tính
@@ -452,7 +459,7 @@ const Cart = (props: some) => {
                           marginRight={1}
                           paddingRight={1}
                           style={{
-                            color: "#9e9e9e",
+                            color: '#9e9e9e',
                           }}
                         >
                           Thành tiền
@@ -467,8 +474,8 @@ const Cart = (props: some) => {
                           paddingRight={1}
                           alignItems="flex-end"
                           style={{
-                            color: "#d50000",
-                            textAlign: "end",
+                            color: '#d50000',
+                            textAlign: 'end',
                           }}
                         >
                           {formatter(bill)}
@@ -478,7 +485,7 @@ const Cart = (props: some) => {
                           marginRight={1}
                           paddingRight={1}
                           style={{
-                            color: "#9e9e9e",
+                            color: '#9e9e9e',
                           }}
                         >
                           (Đã bao gồm thuế VAT nếu có)
@@ -498,17 +505,17 @@ const Cart = (props: some) => {
                 <Button
                   variant="contained"
                   style={{
-                    width: "100%",
-                    textAlign: "center",
+                    width: '100%',
+                    textAlign: 'center',
                     padding: 10,
-                    color: "#ffffff",
-                    backgroundColor: "#eb4034",
+                    color: '#ffffff',
+                    backgroundColor: '#eb4034',
                     borderRadius: 5,
                     fontSize: 17,
-                    fontWeight: "bold",
+                    fontWeight: 'bold',
                   }}
                   onClick={() => {
-                    userID === ""
+                    userID === ''
                       ? setOpenLoginDialog(true)
                       : props?.history?.push(routes.PAYMENT);
                     // fetchConfirmPayment
@@ -519,7 +526,8 @@ const Cart = (props: some) => {
                 <LoginDialog
                   isOpen={openLoginDialog}
                   setOpenLoginDialog={setOpenLoginDialog}
-                  value="ĐẶT HÀNG"/>
+                  value="ĐẶT HÀNG"
+                />
               </Grid>
             </Grid>
           </Grid>

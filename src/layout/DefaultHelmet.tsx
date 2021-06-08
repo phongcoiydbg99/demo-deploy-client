@@ -1,4 +1,4 @@
-import { Avatar, Box, Container, Paper, Popper } from '@material-ui/core';
+import { Avatar, Container, Paper, Popper } from '@material-ui/core';
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/core/Menu';
@@ -10,6 +10,7 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import MenuIcon from '@material-ui/icons/Menu';
 import MoreIcon from '@material-ui/icons/MoreVert';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
+import JSONbig from 'json-bigint';
 import React, { useEffect } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
@@ -21,10 +22,10 @@ import {
   SUCCESS_CODE,
 } from '../constants/constants';
 import { routes } from '../constants/routes';
+import { ProductCount } from '../models/object';
 import { Col, Row } from '../modules/common/Elements';
-import { actionGetAllProduct } from '../modules/system/systemAction';
-import JSONbig from 'json-bigint';
 import SearchBox from '../modules/profile/component/SearchBox';
+import { actionGetAllProduct } from '../modules/system/systemAction';
 interface Props {
   readonly profile?: some;
 }
@@ -67,7 +68,7 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
-  const { profile } = props;
+  // const { profile } = props;
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [data, setData] = React.useState<any>();
@@ -77,13 +78,6 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
   const [anchorElMenu, setAnchorElMenu] = React.useState<HTMLElement | null>(
     null
   );
-  const [anchorElMenuAgent, setAnchorElMenuAgent] = React.useState(null);
-  const handleClickAgent = (event: any) => {
-    setAnchorElMenuAgent(event.currentTarget);
-  };
-  const handleCloseAgent = () => {
-    setAnchorElMenuAgent(null);
-  };
   const open = Boolean(anchorElMenu);
   const [
     mobileMoreAnchorEl,
@@ -94,6 +88,10 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
   );
   const isMenuOpen = Boolean(anchorEl);
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+  const { countProduct, setCountProduct } = React.useContext(ProductCount) as {
+    countProduct: number;
+    setCountProduct: React.Dispatch<React.SetStateAction<number>>;
+  };
 
   useEffect(() => {
     setLogin(userProfile?.userName !== undefined); // eslint-disable-next-line
@@ -152,14 +150,12 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
     props?.history?.push(route);
   };
   const gotoDetailCategory = (id: number) => {
-    props?.history?.push(`/`);
-    props?.history?.push(`detail-category/${id}`);
+    props?.history?.push(`/detail-category/${id}`);
   };
 
   const gotoCart = (route: string) => props?.history?.push(route);
   const gotoProfile = (route: string) => {
-    props?.history?.push(`/`);
-    props?.history?.push(`customer`);
+    props?.history?.push(`/customer`);
   };
   const menuId = 'primary-search-account-menu';
   const renderMenu = (
@@ -248,7 +244,7 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
             >
               <Typography
                 className={classes.title}
-                variant="h6"
+                variant="h5"
                 noWrap
                 style={{
                   marginRight: 10,
@@ -272,13 +268,14 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
                   // onClick={handleClickAgent}
                   onMouseEnter={handlePopoverOpen}
                   onMouseLeave={handlePopoverClose}
+                  style={{ borderRadius: 0 }}
                 >
                   <Row>
                     <MenuIcon fontSize="large" />
                     <Col>
                       <Typography
                         style={{
-                          fontSize: 10,
+                          fontSize: 14,
                           paddingTop: 10,
                           textAlign: 'left',
                         }}
@@ -288,7 +285,7 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
                       </Typography>
                       <Typography
                         style={{
-                          fontSize: 12,
+                          fontSize: 14,
                           paddingBottom: 10,
                           fontWeight: 'bold',
                         }}
@@ -344,7 +341,7 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
                 justifyContent: 'flex-end',
               }}
             >
-            <SearchBox />
+              <SearchBox />
             </Row>
             <Row
               style={{
@@ -363,6 +360,7 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
                     aria-haspopup="true"
                     onClick={handleProfileMenuOpen}
                     color="inherit"
+                    style={{ borderRadius: 0 }}
                   >
                     <Row>
                       <Avatar
@@ -373,7 +371,7 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
                       <Col>
                         <Typography
                           style={{
-                            fontSize: 10,
+                            fontSize: 14,
                             paddingTop: 10,
                             textAlign: 'left',
                           }}
@@ -382,7 +380,7 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
                           Tài khoản
                         </Typography>
                         <Typography
-                          style={{ fontSize: 10, paddingBottom: 10 }}
+                          style={{ fontSize: 14, paddingBottom: 10 }}
                           variant="body2"
                         >
                           {userProfile?.userName}
@@ -392,7 +390,10 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
                   </IconButton>
                 </Row>
               </div>
-              <div className={classes.sectionDesktop}>
+              <div
+                className={classes.sectionDesktop}
+                style={{ position: 'relative' }}
+              >
                 <IconButton
                   edge="end"
                   aria-label="account of current user"
@@ -402,13 +403,28 @@ const DefaultHelmet: React.FC<RouteComponentProps<any> & Props> = (props) => {
                   onClick={() => {
                     gotoCart(routes.PRODUCT_CART);
                   }}
+                  style={{ borderRadius: 0 }}
                 >
                   <Row>
                     <ShoppingCartIcon fontSize="large" />
-                    <Typography style={{ fontSize: 10, paddingTop: 12 }}>
+                    <Typography style={{ fontSize: 14, paddingTop: 12 }}>
                       Giỏ hàng
                     </Typography>
                   </Row>
+                  <div
+                    style={{
+                      backgroundColor: 'orange',
+                      width: 25,
+                      height: 25,
+                      borderRadius: "50%",
+                      position: 'absolute',
+                      top: 0,
+                    }}
+                  >
+                    <Typography style={{ fontSize: '13px', marginTop:2 }}>
+                      {countProduct}
+                    </Typography>
+                  </div>
                 </IconButton>
               </div>
               <div className={classes.sectionMobile}>
